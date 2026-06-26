@@ -25,6 +25,7 @@ SECRET_KEY = os.getenv(
     "django-insecure-local-development-key-change-me",
 )
 
+<<<<<<< HEAD
 DEBUG = os.getenv("DEBUG", "True").lower() in {"1", "true", "yes", "on"}
 
 
@@ -37,6 +38,9 @@ ALLOWED_HOSTS = split_env(
     "ALLOWED_HOSTS",
     "localhost,127.0.0.1,.onrender.com,.railway.app",
 )
+=======
+ALLOWED_HOSTS = ["*"]
+>>>>>>> ed0d7fae911a9dfcb124b6c6bd6fa3504b8e55e6
 
 INSTALLED_APPS = [
     "django.contrib.admin",
