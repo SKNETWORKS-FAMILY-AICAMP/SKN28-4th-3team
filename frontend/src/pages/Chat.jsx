@@ -2,6 +2,166 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/api";
 
+function MarkdownAnswer({ text }) {
+  const lines = (text || "").split("\n");
+  const blocks = [];
+  let index = 0;
+
+  const isTableLine = (line) => line.trim().startsWith("|") && line.trim().endsWith("|");
+  const isDividerLine = (line) => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+
+  while (index < lines.length) {
+    const line = lines[index];
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      index += 1;
+      continue;
+    }
+
+    if (trimmed === "---") {
+      blocks.push({ type: "divider" });
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.startsWith("### ")) {
+      blocks.push({ type: "heading", text: trimmed.replace(/^###\s+/, "") });
+      index += 1;
+      continue;
+    }
+
+    if (trimmed.startsWith("## ")) {
+      blocks.push({ type: "heading", text: trimmed.replace(/^##\s+/, "") });
+      index += 1;
+      continue;
+    }
+
+    if (isTableLine(line)) {
+      const tableLines = [];
+      while (index < lines.length && isTableLine(lines[index])) {
+        if (!isDividerLine(lines[index])) {
+          tableLines.push(lines[index]);
+        }
+        index += 1;
+      }
+
+      const rows = tableLines.map((row) =>
+        row
+          .trim()
+          .replace(/^\|/, "")
+          .replace(/\|$/, "")
+          .split("|")
+          .map((cell) => cell.trim())
+      );
+
+      if (rows.length > 0) {
+        blocks.push({ type: "table", rows });
+      }
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(trimmed)) {
+      const items = [];
+      while (index < lines.length && /^[-*]\s+/.test(lines[index].trim())) {
+        items.push(lines[index].trim().replace(/^[-*]\s+/, ""));
+        index += 1;
+      }
+      blocks.push({ type: "list", items });
+      continue;
+    }
+
+    if (/^\d+\.\s+/.test(trimmed)) {
+      const items = [];
+      while (index < lines.length && /^\d+\.\s+/.test(lines[index].trim())) {
+        items.push(lines[index].trim().replace(/^\d+\.\s+/, ""));
+        index += 1;
+      }
+      blocks.push({ type: "ordered", items });
+      continue;
+    }
+
+    const paragraph = [trimmed];
+    index += 1;
+    while (
+      index < lines.length &&
+      lines[index].trim() &&
+      !lines[index].trim().startsWith("### ") &&
+      !lines[index].trim().startsWith("## ") &&
+      lines[index].trim() !== "---" &&
+      !isTableLine(lines[index]) &&
+      !/^[-*]\s+/.test(lines[index].trim()) &&
+      !/^\d+\.\s+/.test(lines[index].trim())
+    ) {
+      paragraph.push(lines[index].trim());
+      index += 1;
+    }
+    blocks.push({ type: "paragraph", text: paragraph.join(" ") });
+  }
+
+  return (
+    <div className="answer-markdown">
+      {blocks.map((block, blockIndex) => {
+        if (block.type === "heading") {
+          return <h3 key={blockIndex}>{block.text}</h3>;
+        }
+
+        if (block.type === "divider") {
+          return <hr key={blockIndex} />;
+        }
+
+        if (block.type === "list") {
+          return (
+            <ul key={blockIndex}>
+              {block.items.map((item, itemIndex) => (
+                <li key={itemIndex}>{item}</li>
+              ))}
+            </ul>
+          );
+        }
+
+        if (block.type === "ordered") {
+          return (
+            <ol key={blockIndex}>
+              {block.items.map((item, itemIndex) => (
+                <li key={itemIndex}>{item}</li>
+              ))}
+            </ol>
+          );
+        }
+
+        if (block.type === "table") {
+          const [head, ...body] = block.rows;
+          return (
+            <div key={blockIndex} className="answer-table-wrap">
+              <table className="answer-table">
+                <thead>
+                  <tr>
+                    {head.map((cell, cellIndex) => (
+                      <th key={cellIndex}>{cell}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {body.map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                      {row.map((cell, cellIndex) => (
+                        <td key={cellIndex}>{cell}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        }
+
+        return <p key={blockIndex}>{block.text}</p>;
+      })}
+    </div>
+  );
+}
+
 export default function Chat() {
   const navigate = useNavigate();
 
@@ -11,9 +171,9 @@ export default function Chat() {
   const [loading, setLoading] = useState(false);
 
   const exampleQuestions = [
-    "Can I take Tylenol on an empty stomach?",
-    "Can I take ibuprofen with cold medicine?",
-    "What should I be careful about when taking antibiotics?",
+    "타이레놀을 공복에 먹어도 되나요?",
+    "이부프로펜을 감기약과 같이 먹어도 되나요?",
+    "항생제를 복용할 때 주의할 점은 무엇인가요?",
   ];
 
   const labelMap = {
@@ -26,7 +186,7 @@ export default function Chat() {
     BREASTFEEDING: "수유 중",
   };
 
-  const label = (value) => labelMap[value] || value;
+  const label = (value) => labelMap[value] || value || "미입력";
 
   const fetchProfile = async () => {
     try {
@@ -59,10 +219,12 @@ export default function Chat() {
         {
           question: response.data.question,
           answer: response.data.answer,
+          sources: response.data.sources || [],
+          answerMode: response.data.answer_mode,
         },
       ]);
     } catch (error) {
-      alert("채팅 요청 실패");
+      alert("채팅 요청에 실패했습니다.");
       console.error(error);
     } finally {
       setLoading(false);
@@ -84,8 +246,8 @@ export default function Chat() {
           <span className="badge">Step 3</span>
           <h1>AI 의약품 상담</h1>
           <p>
-            저장된 건강정보는 답변 생성에 참고되며, 답변에는 필요한 주의사항만
-            반영됩니다.
+            저장된 건강정보와 의약품 데이터를 함께 참고해 복용 전 필요한 주의사항을
+            안내합니다.
           </p>
         </div>
 
@@ -118,15 +280,15 @@ export default function Chat() {
               </div>
               <div className="summary-item danger">
                 <span>알레르기</span>
-                <strong>{profile.allergies}</strong>
+                <strong>{profile.allergies || "없음"}</strong>
               </div>
               <div className="summary-item warning">
                 <span>기저질환</span>
-                <strong>{profile.diseases}</strong>
+                <strong>{profile.diseases || "없음"}</strong>
               </div>
               <div className="summary-item info">
                 <span>복용약</span>
-                <strong>{profile.current_medications}</strong>
+                <strong>{profile.current_medications || "없음"}</strong>
               </div>
             </div>
           </div>
@@ -160,7 +322,7 @@ export default function Chat() {
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="예: Can I take Tylenol on an empty stomach?"
+            placeholder="예: 타이레놀을 공복에 먹어도 되나요?"
           />
           <button type="submit" disabled={loading}>
             {loading ? "생성 중..." : "질문하기"}
@@ -169,7 +331,7 @@ export default function Chat() {
 
         {loading && (
           <div className="loading-box">
-            건강정보를 참고해 답변을 생성하고 있습니다...
+            건강정보와 의약품 데이터를 참고해 답변을 생성하고 있습니다...
           </div>
         )}
 
@@ -177,7 +339,22 @@ export default function Chat() {
           {messages.map((msg, index) => (
             <div key={index} className="message-box">
               <div className="question">Q. {msg.question}</div>
-              <div className="answer">A. {msg.answer}</div>
+              <div className="answer">
+                <span className="answer-label">A.</span>
+                <MarkdownAnswer text={msg.answer} />
+              </div>
+              {msg.sources?.length > 0 && (
+                <div className="source-list">
+                  <strong>참고 출처</strong>
+                  {msg.sources.slice(0, 3).map((source, sourceIndex) => (
+                    <div key={sourceIndex} className="source-item">
+                      {source.title || "제목 없음"}
+                      {source.manufacturer ? ` / ${source.manufacturer}` : ""}
+                      {source.source ? ` / ${source.source}` : ""}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
