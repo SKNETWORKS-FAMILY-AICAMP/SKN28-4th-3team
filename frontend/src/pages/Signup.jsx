@@ -22,15 +22,22 @@ export default function Signup() {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+
+    if (!form.username.trim() || !form.email.trim() || !form.password.trim()) {
+      alert("아이디, 이메일, 비밀번호를 모두 입력해주세요.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       await api.post("/api/accounts/signup/", form);
 
-      alert("회원가입 성공! 로그인 화면으로 이동합니다.");
+      alert("회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.");
       navigate("/");
     } catch (error) {
-      alert("회원가입 실패: 이미 존재하는 아이디일 수 있습니다.");
+      const message = error.response?.data?.error || "회원가입에 실패했습니다.";
+      alert(message);
       console.error(error);
     } finally {
       setLoading(false);
@@ -43,8 +50,8 @@ export default function Signup() {
         <span className="badge">Step 1</span>
         <h1>먼저 계정을 만들어주세요</h1>
         <p>
-          회원가입 후 건강정보를 등록하면, 의약품 질문 시 개인 건강정보를
-          반영한 답변을 받을 수 있습니다.
+          회원가입 후 건강정보를 등록하면, 의약품 질문에 개인 건강정보를 반영한
+          답변을 받을 수 있습니다.
         </p>
       </div>
 

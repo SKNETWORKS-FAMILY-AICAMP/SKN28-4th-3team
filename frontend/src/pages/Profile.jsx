@@ -72,7 +72,7 @@ export default function Profile() {
 
       navigate("/chat");
     } catch (error) {
-      alert("건강정보 저장 실패");
+      alert("건강정보 저장에 실패했습니다.");
       console.error(error);
     } finally {
       setLoading(false);
@@ -90,7 +90,7 @@ export default function Profile() {
           <span className="badge">Step 2</span>
           <h1>건강 프로필 등록</h1>
           <p>
-            입력한 건강정보는 의약품 상담 답변의 개인화 요소로 활용됩니다.
+            입력한 건강정보는 의약품 상담 답변의 개인화 요소로 사용됩니다.
           </p>
         </div>
 
@@ -226,9 +226,9 @@ export default function Profile() {
                 <option value="혈압약">혈압약</option>
                 <option value="당뇨약">당뇨약</option>
                 <option value="위장약">위장약</option>
-                <option value="항응고제">항응고제/혈전약</option>
-                <option value="수면제/안정제">수면제/안정제</option>
-                <option value="항우울제">항우울제</option>
+                <option value="항응고제/혈전약">항응고제/혈전약</option>
+                <option value="수면제/진정제">수면제/진정제</option>
+                <option value="우울증약">우울증약</option>
                 <option value="피임약">피임약</option>
                 <option value="영양제">영양제</option>
                 <option value="기타">기타</option>

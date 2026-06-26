@@ -20,7 +20,7 @@ function App() {
     <div>
       <nav className="navbar">
         <div className="logo" onClick={() => navigate("/chat")}>
-          💊 MediPill
+          MediPill
         </div>
 
         <div className="nav-links">
@@ -29,7 +29,7 @@ function App() {
           <Link to="/profile">건강정보</Link>
           <Link to="/chat">AI 상담</Link>
           <Link to="/history">상담이력</Link>
-          <button className="logout-btn" onClick={handleLogout}>
+          <button type="button" className="logout-btn" onClick={handleLogout}>
             로그아웃
           </button>
         </div>

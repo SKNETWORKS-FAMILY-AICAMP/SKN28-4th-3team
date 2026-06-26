@@ -21,6 +21,12 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    if (!form.username.trim() || !form.password.trim()) {
+      alert("아이디와 비밀번호를 입력해주세요.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -45,20 +51,20 @@ export default function Login() {
         <span className="badge">Personalized Medicine Q&A</span>
         <h1>내 건강정보를 반영한 의약품 상담</h1>
         <p>
-          MediPill은 사용자의 건강 프로필을 기반으로 의약품 복용 주의사항을
+          MediPill은 사용자의 건강 프로필을 바탕으로 의약품 복용 주의사항을
           안내하는 LLM 연동 웹 애플리케이션입니다.
         </p>
 
         <div className="feature-list">
-          <div>✅ 건강정보 기반 맞춤 답변</div>
-          <div>✅ 상담 이력 저장</div>
-          <div>✅ JWT 인증 기반 개인화</div>
+          <div>건강정보 기반 맞춤 답변</div>
+          <div>상담 이력 저장</div>
+          <div>JWT 인증 기반 개인화</div>
         </div>
       </div>
 
       <div className="card auth-card">
         <h2>로그인</h2>
-        <p className="sub-text">계정으로 로그인 후 상담을 시작하세요.</p>
+        <p className="sub-text">계정으로 로그인하고 상담을 시작하세요.</p>
 
         <form onSubmit={handleLogin}>
           <label>아이디</label>

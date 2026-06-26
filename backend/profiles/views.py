@@ -1,7 +1,7 @@
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
 
 from .models import HealthProfile
 from .serializers import HealthProfileSerializer
@@ -20,14 +20,14 @@ def health_profile(request):
         except HealthProfile.DoesNotExist:
             return Response(
                 {"error": "건강정보가 등록되어 있지 않습니다."},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     if request.method == "POST":
         if HealthProfile.objects.filter(user=user).exists():
             return Response(
                 {"error": "이미 건강정보가 등록되어 있습니다. 수정 기능을 이용해주세요."},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         serializer = HealthProfileSerializer(data=request.data)
@@ -39,7 +39,7 @@ def health_profile(request):
                     "message": "건강정보가 저장되었습니다.",
                     "profile": serializer.data,
                 },
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_201_CREATED,
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -50,7 +50,7 @@ def health_profile(request):
         except HealthProfile.DoesNotExist:
             return Response(
                 {"error": "수정할 건강정보가 없습니다."},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         serializer = HealthProfileSerializer(profile, data=request.data)
